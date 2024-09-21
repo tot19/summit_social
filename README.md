@@ -11,6 +11,13 @@ podman-compose up -d
 podman-compose ps
 ```
 
+## or docker-compose
+```
+docker-compose build --no-cache
+docker-compose up -d
+docker-compose ps
+```
+
 ## Deleting local build
 ```
 podman-compose down
