@@ -1,8 +1,8 @@
-// backend/cmd/main.go
 package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -12,5 +12,8 @@ func main() {
 	})
 
 	fmt.Println("Backend server is running on port 8080")
-	http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(":8080", nil)
+	if err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
 }

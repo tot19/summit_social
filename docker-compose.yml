@@ -3,12 +3,23 @@ services:
     image: postgres:15
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./postgres-config/pg_hba.conf:/etc/postgresql/pg_hba.conf
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: summit_social
+      PGDATA: /var/lib/postgresql/data/pgdata
+    command: 
+      - "postgres"
+      - "-c"
+      - "hba_file=/etc/postgresql/pg_hba.conf"
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   frontend:
     build:

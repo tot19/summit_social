@@ -4,6 +4,9 @@ FROM golang:1.21
 # Set working directory inside the container
 WORKDIR /app
 
+# Download and install golangci-lint
+RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.54.2
+
 # Copy go.mod and go.sum first to leverage Docker caching
 COPY go.mod go.sum ./
 

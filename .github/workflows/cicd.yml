@@ -1,0 +1,92 @@
+name: Summit Social CI/CD
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - name: Build Docker images
+        run: docker-compose build
+
+      - name: Start Docker containers
+        run: docker-compose up -d
+
+      - name: Check running containers
+        run: docker-compose ps
+
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          timeout=30
+          until docker-compose exec -T postgres pg_isready -h localhost -p 5432 || [ $timeout -le 0 ]; do
+            echo "Waiting for PostgreSQL to be ready... ($(( timeout-- )) seconds left)"
+            sleep 1
+          done
+          if [ $timeout -le 0 ]; then
+            echo "Timed out waiting for PostgreSQL to be ready"
+            exit 1
+          fi
+
+      - name: Run frontend tests
+        run: |
+          docker-compose run frontend bundle exec rails db:create db:migrate
+          docker-compose run frontend bundle exec rails test
+          docker-compose run frontend bundle exec rails test:system
+
+      - name: Run backend tests
+        run: docker-compose run backend go test ./...
+
+      - name: Run frontend linter
+        run: docker-compose run frontend bundle exec rubocop
+
+      - name: Run backend linter
+        run: docker-compose run backend golangci-lint run
+
+      - name: Scan for Ruby security vulnerabilities
+        run: docker-compose run frontend bundle exec brakeman --no-pager
+
+      - name: Stop Docker containers
+        run: docker-compose down
+
+      - name: Keep screenshots from failed system tests
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: screenshots
+          path: ${{ github.workspace }}/frontend/tmp/screenshots
+          if-no-files-found: ignore
+
+  deployment:
+    needs: integration
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # - name: Deploy to Render
+      #   uses: johnbeynon/render-deploy-action@v0.0.8
+      #   with:
+      #     service-id: ${{ secrets.RENDER_SERVICE_ID }}
+      #     api-key: ${{ secrets.RENDER_API_KEY }}
+
+      # - name: Wait for deployment
+      #   uses: bounceapp/render-action@0.6.0
+      #   with:
+      #     render-token: ${{ secrets.RENDER_API_KEY }}
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      #     service-id: ${{ secrets.RENDER_SERVICE_ID }}
+      #     retries: 20
+      #     wait: 16000
+      #     sleep: 30000

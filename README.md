@@ -1,5 +1,9 @@
 # summit_social
 
+## MUST INSTALL
+- podman
+- podman-compose
+
 ## Building locally
 ```
 podman-compose build --no-cache
