@@ -5,6 +5,7 @@ services:
       - pgdata:/var/lib/postgresql/data
       - ./postgres/config/pg_hba.conf:/etc/postgresql/pg_hba.conf
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./postgres/seed.sql:/docker-entrypoint-initdb.d/seed.sql
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -33,11 +34,9 @@ services:
       - "3000:3000"
     depends_on:
       - postgres
+      - backend
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_HOST: postgres
-      POSTGRES_DB: summit_social
+      GO_BACKEND_URL: http://backend:8080
       RAILS_ENV: development
 
   backend:

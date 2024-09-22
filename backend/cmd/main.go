@@ -48,10 +48,11 @@ func main() {
 	router := gin.Default()
 
 	// Define the API routes
-	router.POST("/posts", createPost)
-	router.GET("/posts/:id", getPost)
-	router.PUT("/posts/:id", updatePost)
-	router.DELETE("/posts/:id", deletePost)
+	router.POST("/post", createPost)
+	router.GET("/posts", getPosts)
+	router.GET("/post/:id", getPost)
+	router.PUT("/post/:id", updatePost)
+	router.DELETE("/post/:id", deletePost)
 
 	// Start the server
 	if err := router.Run(":8080"); err != nil {
@@ -69,6 +70,13 @@ func createPost(c *gin.Context) {
 
 	db.Create(&post)
 	c.JSON(http.StatusCreated, post)
+}
+
+// Get all posts
+func getPosts(c *gin.Context) {
+	var posts []Post
+	db.Find(&posts)
+	c.JSON(http.StatusOK, posts)
 }
 
 // Get a single post by ID

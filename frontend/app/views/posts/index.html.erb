@@ -1,0 +1,21 @@
+<h1>Summit Social Posts</h1>
+<% if @error.present? %>
+  <p style="color: red;"><%= @error %></p>
+<% end %>
+<% if @posts.any? %>
+  <ul>
+    <% @posts.each do |post| %>
+      <li>
+        <p><%= post["Content"] %></p>
+        <p>Posted by: <%= post["Poster"] %></p>
+        <p>Likes: <%= post["Likes"] %></p>
+        <% if post["Image"].present? %>
+          <img src="<%= post["Image"] %>" alt="Post image">
+        <% end %>
+        <p>Comments: <%= post["CommentsCount"] %></p>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p>No posts available.</p>
+<% end %>

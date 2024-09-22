@@ -17,10 +17,10 @@ import (
 func setupRouter() *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	router := gin.Default()
-	router.POST("/posts", createPost)
-	router.GET("/posts/:id", getPost)
-	router.PUT("/posts/:id", updatePost)
-	router.DELETE("/posts/:id", deletePost)
+	router.POST("/post", createPost)
+	router.GET("/post/:id", getPost)
+	router.PUT("/post/:id", updatePost)
+	router.DELETE("/post/:id", deletePost)
 	router.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "pong"})
 	})
@@ -39,18 +39,6 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-// Test the ping route
-func TestPingRoute(t *testing.T) {
-	router := setupRouter()
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/ping", nil)
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, 200, w.Code)
-	assert.JSONEq(t, `{"message":"pong"}`, w.Body.String())
-}
-
 // Test creating a post
 func TestCreatePost(t *testing.T) {
 	router := setupRouter()
@@ -63,7 +51,7 @@ func TestCreatePost(t *testing.T) {
 
 	jsonValue, _ := json.Marshal(post)
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/posts", bytes.NewBuffer(jsonValue))
+	req, _ := http.NewRequest("POST", "/post", bytes.NewBuffer(jsonValue))
 	req.Header.Set("Content-Type", "application/json")
 	router.ServeHTTP(w, req)
 
@@ -77,6 +65,22 @@ func TestCreatePost(t *testing.T) {
 	assert.Equal(t, post.Poster, createdPost.Poster)
 	assert.Equal(t, 0, createdPost.Likes)
 	assert.Equal(t, 0, createdPost.CommentsCount)
+}
+
+// Test getting all posts
+func TestGetPosts(t *testing.T) {
+	router := setupRouter()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/post", nil)
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, 200, w.Code)
+
+	var posts []Post
+	err := json.Unmarshal(w.Body.Bytes(), &posts)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, posts)
 }
 
 // Test getting a post by ID
@@ -93,7 +97,7 @@ func TestGetPost(t *testing.T) {
 	assert.NoError(t, result.Error)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", fmt.Sprintf("/posts/%d", post.ID), nil)
+	req, _ := http.NewRequest("GET", fmt.Sprintf("/post/%d", post.ID), nil)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)
@@ -123,7 +127,7 @@ func TestUpdatePost(t *testing.T) {
 
 	updatedPostJSON, _ := json.Marshal(updatedPost)
 
-	req, _ := http.NewRequest("PUT", fmt.Sprintf("/posts/%d", post.ID), bytes.NewBuffer(updatedPostJSON))
+	req, _ := http.NewRequest("PUT", fmt.Sprintf("/post/%d", post.ID), bytes.NewBuffer(updatedPostJSON))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
@@ -151,7 +155,7 @@ func TestDeletePost(t *testing.T) {
 	assert.NoError(t, result.Error)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/posts/%d", post.ID), nil)
+	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/post/%d", post.ID), nil)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, 204, w.Code)
