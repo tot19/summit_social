@@ -6,14 +6,18 @@ import (
 	"net/http"
 	"os"
 
+	_ "github.com/tot19/summit_social/docs"
+
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 // Post model
 type Post struct {
-	ID            uint   `gorm:"primaryKey"`
+	ID            uint   `gorm:"primaryKey;autoIncrement"`
 	Date          string `gorm:"default:CURRENT_TIMESTAMP"`
 	Content       string
 	Image         string
@@ -40,12 +44,20 @@ func initDB() {
 	}
 }
 
+// @title Summit Social API
+// @version 1.0
+// @description This is a social media API server.
+// @host localhost:8080
+// @BasePath /
 func main() {
 	// Initialize the database connection
 	initDB()
 
 	// Create a new Gin router
 	router := gin.Default()
+
+	// Serve the Swagger documentation
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Define the API routes
 	router.POST("/post", createPost)
@@ -61,6 +73,15 @@ func main() {
 }
 
 // Create a new post
+// @Summary Create a new post
+// @Description Create a new post with the input payload
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Param post body Post true "Create post"
+// @Success 201 {object} Post
+// @Failure 400 {object} map[string]interface{}
+// @Router /post [post]
 func createPost(c *gin.Context) {
 	var post Post
 	if err := c.ShouldBindJSON(&post); err != nil {
@@ -73,6 +94,12 @@ func createPost(c *gin.Context) {
 }
 
 // Get all posts
+// @Summary Get all posts
+// @Description Get a list of all posts
+// @Tags posts
+// @Produce json
+// @Success 200 {array} Post
+// @Router /posts [get]
 func getPosts(c *gin.Context) {
 	var posts []Post
 	db.Find(&posts)
@@ -80,6 +107,14 @@ func getPosts(c *gin.Context) {
 }
 
 // Get a single post by ID
+// @Summary Get a post by ID
+// @Description Get a post by its ID
+// @Tags posts
+// @Produce json
+// @Param id path int true "Post ID"
+// @Success 200 {object} Post
+// @Failure 400 {object} map[string]interface{}
+// @Router /post/{id} [get]
 func getPost(c *gin.Context) {
 	var post Post
 	id := c.Param("id")
@@ -93,6 +128,17 @@ func getPost(c *gin.Context) {
 }
 
 // Update an existing post
+// @Summary Update a post
+// @Description Update an existing post by its ID
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Param id path int true "Post ID"
+// @Param post body Post true "Update post"
+// @Success 200 {object} Post
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object}  map[string]interface{}
+// @Router /post/{id} [put]
 func updatePost(c *gin.Context) {
 	var post Post
 	id := c.Param("id")
@@ -116,6 +162,13 @@ func updatePost(c *gin.Context) {
 }
 
 // Delete a post by ID
+// @Summary Delete a post by ID
+// @Description Delete a post by its ID
+// @Tags posts
+// @Param id path int true "Post ID"
+// @Success 204
+// @Failure 400 {object} map[string]interface{}
+// @Router /post/{id} [delete]
 func deletePost(c *gin.Context) {
 	var post Post
 	id := c.Param("id")

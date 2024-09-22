@@ -1,12 +1,12 @@
 # app/services/go_api_service.rb
-require 'httparty'
+require "httparty"
 
 class GoApiService
   include HTTParty
-  base_uri ENV['GO_BACKEND_URL']
+  base_uri ENV["GO_BACKEND_URL"]
 
   def get_posts
-    response = self.class.get('/posts')
+    response = self.class.get("/posts")
     if response.success?
       JSON.parse(response.body)
     else

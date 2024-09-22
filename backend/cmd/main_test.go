@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -11,12 +12,28 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
+
+func initTestDB() {
+	var err error
+	db, err = gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	if err != nil {
+		log.Fatal("Failed to connect to the in-memory database:", err)
+	}
+
+	// Migrate the schema
+	if err := db.AutoMigrate(&Post{}); err != nil {
+		log.Fatal("Failed to auto migrate database schema:", err)
+	}
+}
 
 // SetupRouter initializes the Gin router with routes
 func setupRouter() *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	router := gin.Default()
+	router.GET("/posts", getPosts)
 	router.POST("/post", createPost)
 	router.GET("/post/:id", getPost)
 	router.PUT("/post/:id", updatePost)
@@ -29,14 +46,24 @@ func setupRouter() *gin.Engine {
 
 // TestMain sets up the environment before running tests
 func TestMain(m *testing.M) {
-	// Initialize the database
-	initDB()
+	// Initialize the test database
+	initTestDB()
 
-	// Run the tests
+	seedTestData()
+
+	// Run tests
 	code := m.Run()
 
-	// Exit with the appropriate code
 	os.Exit(code)
+}
+
+func seedTestData() {
+	// Create common test data here
+	db.Create(&Post{
+		Content: "Initial Test Post",
+		Image:   "/images/init.png",
+		Poster:  "init-tester",
+	})
 }
 
 // Test creating a post
@@ -71,8 +98,17 @@ func TestCreatePost(t *testing.T) {
 func TestGetPosts(t *testing.T) {
 	router := setupRouter()
 
+	// Optionally, create a post to ensure the database is not empty
+	post := Post{
+		Content: "Sample Post",
+		Image:   "/images/sample.png",
+		Poster:  "tester",
+	}
+	result := db.Create(&post)
+	assert.NoError(t, result.Error)
+
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/post", nil)
+	req, _ := http.NewRequest("GET", "/posts", nil)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, 200, w.Code)

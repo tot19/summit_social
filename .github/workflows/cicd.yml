@@ -40,7 +40,6 @@ jobs:
 
       - name: Run frontend tests
         run: |
-          docker-compose run frontend bundle exec rails db:create db:migrate
           docker-compose run frontend bundle exec rails test
           docker-compose run frontend bundle exec rails test:system
 
@@ -58,14 +57,6 @@ jobs:
 
       - name: Stop Docker containers
         run: docker-compose down
-
-      - name: Keep screenshots from failed system tests
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: screenshots
-          path: ${{ github.workspace }}/frontend/tmp/screenshots
-          if-no-files-found: ignore
 
   deployment:
     needs: integration
