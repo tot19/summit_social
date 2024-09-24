@@ -1,4 +1,8 @@
-# summit_social
+# SummitSocial
+For climbers who want to bond over their favorite hobby. Invite climbers to your climb sessions and SEND together!
+
+![image](https://github.com/user-attachments/assets/27417e29-c8a9-483c-b0b6-a99b8a28a91a)
+
 
 ## MUST INSTALL
 - podman
